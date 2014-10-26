@@ -155,8 +155,16 @@ class BTNProvider(generic.TorrentProvider):
             errorstring = str(error)
             if (errorstring.startswith('<') and errorstring.endswith('>')):
                 errorstring = errorstring[1:-1]
-            logger.log(u"Unknown error while accessing " + self.name + ": " + errorstring, logger.ERROR)
-
+            if "ProtocolError" in errorstring:
+                # Likely a temporary failure, like the following that occured during DDoS on BTN
+                # ProtocolError for api.btnapps.net: 502 Bad Gateway
+                # ProtocolError for api.btnapps.net: 520 Origin Error
+                # ProtocolError for api.btnapps.net: 522 Origin Connection Time-out
+                # ProtocolError for api.btnapps.net: 409 Conflict
+                # Only log as a warning
+                logger.log(u"Protocol error while accessing " + self.name + ": " + errorstring, logger.WARNING)
+            else:
+                logger.log(u"Unknown error while accessing " + self.name + ": " + errorstring, logger.ERROR)
         return parsedJSON
 
     def _get_title_and_url(self, parsedJSON):
